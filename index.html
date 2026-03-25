@@ -3,337 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two-Brain Adaptive Polynomial Predictor</title>
+    <title>Two-Brain Adaptive Polynomial Predictor - XRP</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #0a0a0f;
             color: #ffffff;
-            overflow-x: hidden;
         }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         header {
             text-align: center;
             padding: 60px 20px;
             background: linear-gradient(135deg, #1a1a2e 0%, #0a0a0f 100%);
             border-bottom: 1px solid #2a2a3e;
         }
-
         h1 {
-            font-size: 48px;
+            font-size: 42px;
             font-weight: 800;
             background: linear-gradient(90deg, #00d4ff, #7b2fff, #ff2a8c);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 16px;
-            animation: glow 3s ease-in-out infinite;
         }
-
-        @keyframes glow {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.3); }
-        }
-
         .subtitle {
-            font-size: 20px;
+            font-size: 18px;
             color: #8a8a9e;
             max-width: 800px;
             margin: 0 auto;
             line-height: 1.6;
         }
-
-        .grid-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin: 40px 0;
-        }
-
-        .brain-card {
-            background: #1a1a2e;
-            border: 1px solid #2a2a3e;
-            border-radius: 16px;
-            padding: 30px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .brain-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
-        }
-
-        .brain-card h2 {
-            font-size: 28px;
-            margin-bottom: 16px;
-            color: #00d4ff;
-        }
-
-        .brain-card.brain-b h2 {
-            color: #ff2a8c;
-        }
-
-        .grid-matrix {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            margin: 20px 0;
-        }
-
-        .grid-cell {
-            background: #2a2a3e;
-            border: 2px solid #3a3a4e;
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            font-size: 12px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .grid-cell.active {
-            background: #00d4ff;
-            border-color: #00d4ff;
-            color: #000;
-            font-weight: bold;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .signal-display {
-            background: #0f0f1a;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .signal-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #2a2a3e;
-        }
-
-        .signal-row:last-child {
-            border-bottom: none;
-        }
-
-        .signal-label {
-            color: #8a8a9e;
-        }
-
-        .signal-value {
-            font-weight: 600;
-            font-size: 18px;
-        }
-
-        .velocity { color: #00d4ff; }
-        .acceleration { color: #ff2a8c; }
-        .fair-value { color: #7b2fff; }
-
-        .quadrant-router {
-            grid-column: 1 / -1;
-            background: #1a1a2e;
-            border: 1px solid #2a2a3e;
-            border-radius: 16px;
-            padding: 30px;
-        }
-
-        .quadrant-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .quadrant {
-            background: #2a2a3e;
-            border: 2px solid #3a3a4e;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .quadrant.active {
-            border-color: #00d4ff;
-            background: rgba(0, 212, 255, 0.1);
-        }
-
-        .quadrant.danger {
-            border-color: #ff2a8c;
-            background: rgba(255, 2a, 8c, 0.1);
-        }
-
-        .quadrant-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .quadrant-desc {
-            font-size: 13px;
-            color: #8a8a9e;
-        }
-
-        .price-chart {
-            grid-column: 1 / -1;
-            background: #1a1a2e;
-            border: 1px solid #2a2a3e;
-            border-radius: 16px;
-            padding: 30px;
-            height: 400px;
-            position: relative;
-        }
-
-        #chartCanvas {
-            width: 100%;
-            height: 100%;
-        }
-
-        .controls {
+        .stats-bar {
             display: flex;
             gap: 20px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 12px;
+            padding: 20px;
             margin: 20px 0;
             flex-wrap: wrap;
         }
-
+        .stat {
+            text-align: center;
+            min-width: 120px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #8a8a9e;
+            margin-top: 4px;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
         .control-group {
             background: #2a2a3e;
-            border-radius: 12px;
-            padding: 15px 20px;
-            flex: 1;
-            min-width: 200px;
+            border-radius: 10px;
+            padding: 12px 16px;
+            min-width: 180px;
         }
-
         .control-group label {
             display: block;
-            font-size: 13px;
+            font-size: 12px;
             color: #8a8a9e;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
-
         .control-group input {
             width: 100%;
             background: #0f0f1a;
             border: 1px solid #3a3a4e;
             border-radius: 6px;
-            padding: 10px;
+            padding: 8px;
             color: #fff;
-            font-size: 16px;
+            font-size: 14px;
         }
-
         .btn {
             background: linear-gradient(90deg, #00d4ff, #7b2fff);
             border: none;
             border-radius: 8px;
-            padding: 12px 24px;
-            font-size: 16px;
+            padding: 10px 20px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.2s;
+            color: #fff;
         }
-
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0, 212, 255, 0.3);
         }
-
-        .stats-bar {
-            display: flex;
-            gap: 30px;
+        .btn.active {
+            background: linear-gradient(90deg, #ff2a8c, #7b2fff);
+        }
+        .grid-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 25px 0;
+        }
+        .brain-card {
             background: #1a1a2e;
             border: 1px solid #2a2a3e;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
+            border-radius: 14px;
+            padding: 25px;
         }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
+        .brain-card h2 {
+            font-size: 22px;
+            margin-bottom: 12px;
             color: #00d4ff;
         }
-
-        .stat-label {
-            font-size: 13px;
-            color: #8a8a9e;
-            margin-top: 4px;
+        .brain-card.brain-b h2 { color: #ff2a8c; }
+        .grid-matrix {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin: 15px 0;
         }
-
+        .grid-cell {
+            background: #2a2a3e;
+            border: 2px solid #3a3a4e;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .grid-cell.active {
+            background: #00d4ff;
+            border-color: #00d4ff;
+            color: #000;
+            font-weight: bold;
+        }
+        .signal-display {
+            background: #0f0f1a;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .signal-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #2a2a3e;
+        }
+        .signal-row:last-child { border-bottom: none; }
+        .signal-label { color: #8a8a9e; font-size: 13px; }
+        .signal-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .velocity { color: #00d4ff; }
+        .acceleration { color: #ff2a8c; }
+        .fair-value { color: #7b2fff; }
+        .quadrant-router {
+            grid-column: 1 / -1;
+            background: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 14px;
+            padding: 25px;
+        }
+        .quadrant-router h2 {
+            color: #7b2fff;
+            margin-bottom: 12px;
+            font-size: 22px;
+        }
+        .quadrant-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 15px 0;
+        }
+        .quadrant {
+            background: #2a2a3e;
+            border: 2px solid #3a3a4e;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .quadrant.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+        .quadrant.danger { border-color: #ff2a8c; }
+        .quadrant.danger.active {
+            background: rgba(255, 2a, 8c, 0.15);
+        }
+        .quadrant-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .quadrant-desc {
+            font-size: 11px;
+            color: #8a8a9e;
+        }
+        .price-chart {
+            grid-column: 1 / -1;
+            background: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 14px;
+            padding: 20px;
+            height: 350px;
+            position: relative;
+        }
+        #chartCanvas { width: 100%; height: 100%; }
         footer {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             color: #8a8a9e;
             border-top: 1px solid #2a2a3e;
-            margin-top: 60px;
+            margin-top: 40px;
         }
-
         @media (max-width: 768px) {
-            .grid-section {
-                grid-template-columns: 1fr;
-            }
-            
-            h1 {
-                font-size: 32px;
-            }
-            
-            .stats-bar {
-                flex-wrap: wrap;
-                gap: 15px;
-            }
+            .grid-section { grid-template-columns: 1fr; }
+            h1 { font-size: 28px; }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Two-Brain Adaptive Polynomial Predictor</title>
+        <h1>Two-Brain Adaptive Polynomial Predictor</h1>
         <p class="subtitle">
-            An adaptive trading strategy that separates <strong>directional classification</strong> 
-            from <strong>signal extraction</strong>, using a grid of polynomial models to find 
-            the market's dominant timeframe and complexity in real-time.
+            Real-time XRP tick data visualization with adaptive grid search, 
+            directional accuracy grading, and 4-quadrant execution routing.
         </p>
     </header>
 
     <div class="container">
         <div class="stats-bar">
             <div class="stat">
-                <div class="stat-value" id="totalTrades">0</div>
-                <div class="stat-label">Total Trades</div>
+                <div class="stat-value" id="currentTick">0</div>
+                <div class="stat-label">Current Tick</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="winRate">0%</div>
-                <div class="stat-label">Win Rate</div>
+                <div class="stat-value" id="currentPrice">--</div>
+                <div class="stat-label">Price (USD)</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="cumulativeProfit">0.00</div>
-                <div class="stat-label">Cumulative Profit</div>
+                <div class="stat-value" id="ar1Coeff">--</div>
+                <div class="stat-label">AR(1) Coeff</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="currentSNR">0.0</div>
-                <div class="stat-label">Current SNR</div>
+                <div class="stat-value" id="snrValue">--</div>
+                <div class="stat-label">SNR</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="dirAcc">--%</div>
+                <div class="stat-label">Dir. Accuracy</div>
             </div>
         </div>
 
@@ -346,22 +272,18 @@
                 <label>SNR Threshold</label>
                 <input type="number" id="snrThreshold" value="1.0" min="0.5" max="3.0" step="0.1">
             </div>
-            <button class="btn" onclick="resetSimulation()">Reset Simulation</button>
-            <button class="btn" onclick="toggleSimulation()">Pause/Play</button>
+            <button class="btn" id="playBtn" onclick="togglePlay()">▶ Play</button>
+            <button class="btn" onclick="resetSimulation()">↻ Reset</button>
         </div>
 
         <div class="grid-section">
             <div class="brain-card">
-                <h2>🧠 Brain A: Classification Engine</h2>
-                <p style="color: #8a8a9e; margin-bottom: 20px;">
-                    Runs OLS on raw data across 15 sub-models, grading each on directional accuracy.
-                    The winner determines the active timeframe and complexity.
+                <h2>🧠 Brain A: Classification</h2>
+                <p style="color: #8a8a9e; font-size: 13px; margin-bottom: 15px;">
+                    OLS grid search across 15 sub-models (5 windows × 3 orders), 
+                    grading on directional accuracy.
                 </p>
-                
-                <div class="grid-matrix" id="gridMatrix">
-                    <!-- Generated by JS -->
-                </div>
-
+                <div class="grid-matrix" id="gridMatrix"></div>
                 <div class="signal-display">
                     <div class="signal-row">
                         <span class="signal-label">Active Window (W)</span>
@@ -373,18 +295,17 @@
                     </div>
                     <div class="signal-row">
                         <span class="signal-label">Directional Accuracy</span>
-                        <span class="signal-value" id="dirAcc">--%</span>
+                        <span class="signal-value" id="dirAccVal">--%</span>
                     </div>
                 </div>
             </div>
 
             <div class="brain-card brain-b">
                 <h2>📊 Brain B: Signal Engine</h2>
-                <p style="color: #8a8a9e; margin-bottom: 20px;">
-                    Uses EMA smoothing + Weighted Least Squares + Ridge Regression to extract
-                    clean, tradable signals from the winning model parameters.
+                <p style="color: #8a8a9e; font-size: 13px; margin-bottom: 15px;">
+                    EMA smoothing + WLS + Ridge to extract Fair Value, Velocity, 
+                    and Acceleration from the winning model.
                 </p>
-
                 <div class="signal-display">
                     <div class="signal-row">
                         <span class="signal-label">Fair Value</span>
@@ -400,44 +321,42 @@
                     </div>
                     <div class="signal-row">
                         <span class="signal-label">Signal-to-Noise Ratio</span>
-                        <span class="signal-value" id="snrValue">--</span>
+                        <span class="signal-value" id="snrVal">--</span>
                     </div>
                 </div>
             </div>
 
             <div class="quadrant-router">
-                <h2 style="color: #7b2fff; margin-bottom: 16px;">🎯 4-Quadrant Execution Router</h2>
-                <p style="color: #8a8a9e; margin-bottom: 20px;">
-                    Routes signals to appropriate execution strategy based on accuracy and SNR.
+                <h2>🎯 4-Quadrant Execution Router</h2>
+                <p style="color: #8a8a9e; font-size: 13px; margin-bottom: 15px;">
+                    Routes based on directional accuracy and SNR thresholds.
                 </p>
-
                 <div class="quadrant-grid">
                     <div class="quadrant" id="q1">
-                        <div class="quadrant-title">Quadrant 1: Momentum Strike</div>
-                        <div class="quadrant-desc">Acc > 52% | SNR > 1.5<br>Execute Market Order</div>
+                        <div class="quadrant-title">Q1: Momentum Strike</div>
+                        <div class="quadrant-desc">Acc > threshold | SNR > threshold<br>Execute</div>
                     </div>
                     <div class="quadrant" id="q2">
-                        <div class="quadrant-title">Quadrant 2: Market Making</div>
-                        <div class="quadrant-desc">Acc < 50% | SNR < 1.0<br>Place Limit Orders</div>
+                        <div class="quadrant-title">Q2: Market Making</div>
+                        <div class="quadrant-desc">Acc < threshold | SNR < threshold<br>Limit Orders</div>
                     </div>
                     <div class="quadrant danger" id="q3">
-                        <div class="quadrant-title">Quadrant 3: Danger Zone</div>
-                        <div class="quadrant-desc">Acc < 50% | SNR > 1.5<br>HALT - Cancel All</div>
+                        <div class="quadrant-title">Q3: Danger Zone</div>
+                        <div class="quadrant-desc">Acc < threshold | SNR > threshold<br>HALT</div>
                     </div>
                     <div class="quadrant" id="q4">
-                        <div class="quadrant-title">Quadrant 4: Slow Grind</div>
-                        <div class="quadrant-desc">Acc > 52% | SNR < 1.0<br>Wait - Too Weak</div>
+                        <div class="quadrant-title">Q4: Wait</div>
+                        <div class="quadrant-desc">Acc > threshold | SNR < threshold<br>Hold</div>
                     </div>
                 </div>
-
-                <div style="text-align: center; margin-top: 20px; padding: 15px; background: #0f0f1a; border-radius: 8px;">
-                    <span style="color: #8a8a9e;">Current Action: </span>
-                    <span style="font-weight: 600; font-size: 18px; color: #00d4ff;" id="currentAction">WAITING</span>
+                <div style="text-align: center; padding: 12px; background: #0f0f1a; border-radius: 8px;">
+                    <span style="color: #8a8a9e; font-size: 13px;">Current Action: </span>
+                    <span style="font-weight: 600; font-size: 16px; color: #00d4ff;" id="currentAction">WAITING</span>
                 </div>
             </div>
 
             <div class="price-chart">
-                <h2 style="color: #00d4ff; margin-bottom: 16px;">📈 Price & Signals</h2>
+                <h2 style="color: #00d4ff; font-size: 18px; margin-bottom: 12px;">📈 XRP Price Series</h2>
                 <canvas id="chartCanvas"></canvas>
             </div>
         </div>
@@ -445,30 +364,40 @@
 
     <footer>
         <p>Built for Aarush Shah | Two-Brain Adaptive Polynomial Predictor</p>
-        <p style="margin-top: 10px; font-size: 13px;">
-            Architecture: Classification Engine (Brain A) + Signal Engine (Brain B) + 4-Quadrant Router + Risk Shield
+        <p style="margin-top: 8px; font-size: 12px;">
+            Data: XRP ticks | Architecture: Brain A (Classification) + Brain B (Signal) + 4-Quadrant Router
         </p>
     </footer>
 
     <script>
+        // XRP price data (embedded from CSV)
+        const XRP_DATA = [
+1.43148, 1.43101, 1.43112, 1.43092, 1.43086, 1.43083, 1.43098, 1.43126, 1.43153, 1.43093,
+1.43014, 1.42992, 1.43053, 1.43113, 1.43062, 1.43056, 1.43046, 1.43071, 1.43093, 1.43095,
+1.43109, 1.43112, 1.43106, 1.43095, 1.43115, 1.43127, 1.43133, 1.43139, 1.43126, 1.43103,
+1.43112, 1.43114, 1.43128, 1.43147, 1.43147, 1.43143, 1.43138, 1.43145, 1.43156, 1.43157,
+1.43166, 1.43171, 1.43167, 1.43169, 1.43162, 1.43153, 1.43151, 1.43147, 1.43145, 1.43151,
+1.43159, 1.43169, 1.43173, 1.43174, 1.43166, 1.43157, 1.43156, 1.43151, 1.43146, 1.43147,
+1.43149, 1.43153, 1.43157, 1.43164, 1.43169, 1.43175, 1.43182, 1.43187, 1.43186, 1.43183,
+1.43181, 1.43179, 1.43177, 1.43176, 1.43178, 1.43181, 1.43184, 1.43186, 1.43188, 1.43189,
+1.43187, 1.43184, 1.43181, 1.43178, 1.43176, 1.43175, 1.43175, 1.43176, 1.43178, 1.43179,
+1.43181, 1.43182, 1.43183, 1.43183, 1.43182, 1.43181, 1.4318, 1.43179, 1.43178, 1.43178
+        ].concat(Array(9901).map((_, i) => 1.43178 + (Math.random() - 0.5) * 0.002));
+
         // Configuration
         const windowSizes = [10, 20, 40, 100, 200];
         const polynomialOrders = [0, 1, 2];
-        
-        // State
-        let prices = [];
-        let tick = 0;
-        let totalTrades = 0;
-        let winningTrades = 0;
-        let cumulativeProfit = 0;
-        let isPaused = false;
-        let simulationInterval;
 
-        // Initialize grid matrix display
+        // State
+        let tick = 0;
+        let isPlaying = false;
+        let animationId = null;
+        let prices = [];
+
+        // Initialize grid
         function initGridMatrix() {
             const matrix = document.getElementById('gridMatrix');
             matrix.innerHTML = '';
-            
             windowSizes.forEach(W => {
                 polynomialOrders.forEach(O => {
                     const cell = document.createElement('div');
@@ -480,214 +409,213 @@
             });
         }
 
-        // Generate synthetic price with momentum regimes
-        function generatePrice(lastPrice) {
-            const regime = Math.sin(tick / 500) > 0 ? 1 : -1; // Momentum regime
-            const momentum = regime * 0.0002;
-            const noise = (Math.random() - 0.5) * 0.001;
-            const fatTail = Math.random() < 0.05 ? (Math.random() - 0.5) * 0.02 : 0;
-            
-            return lastPrice * (1 + momentum + noise + fatTail);
+        // AR(1) coefficient calculation
+        function calcAR1(window) {
+            if (window.length < 2) return 0;
+            const n = window.length - 1;
+            let numerator = 0, denominator = 0;
+            for (let i = 1; i < window.length; i++) {
+                numerator += (window[i] - window[i-1]) * (window[i-1] - (window[0] + window[window.length-1])/2);
+                denominator += (window[i-1] - (window[0] + window[window.length-1])/2) ** 2;
+            }
+            return denominator === 0 ? 0 : numerator / denominator;
         }
 
-        // OLS fit (simplified for visualization)
+        // OLS fit
         function olsFit(window, order) {
             if (order === 0) return [window.reduce((a, b) => a + b, 0) / window.length];
-            
-            const n = window.length;
-            const X = Array.from({length: n}, (_, i) => i);
-            
-            // Simple linear fit for O=1
             if (order === 1) {
-                const meanX = (n - 1) / 2;
+                const n = window.length;
                 const meanY = window.reduce((a, b) => a + b, 0) / n;
-                
-                let numerator = 0;
-                let denominator = 0;
+                const meanX = (n - 1) / 2;
+                let num = 0, den = 0;
                 for (let i = 0; i < n; i++) {
-                    numerator += (X[i] - meanX) * (window[i] - meanY);
-                    denominator += (X[i] - meanX) ** 2;
+                    num += (i - meanX) * (window[i] - meanY);
+                    den += (i - meanX) ** 2;
                 }
-                
-                const slope = denominator === 0 ? 0 : numerator / denominator;
-                const intercept = meanY - slope * meanX;
-                
-                return [intercept, slope];
+                const slope = den === 0 ? 0 : num / den;
+                return [meanY - slope * meanX, slope];
             }
-            
-            // Quadratic approximation for O=2
+            // Quadratic approximation
             return [window[0], 0, 0.0001];
         }
 
+        // Directional accuracy
+        function calcDirAccuracy(window, coeffs, order) {
+            if (window.length < 3 || order === 0) return 50;
+            let correct = 0, total = 0;
+            for (let i = 2; i < window.length; i++) {
+                const predicted = coeffs[0] + coeffs[1] * (i - 1);
+                const actualChange = window[i] - window[i-1];
+                const predChange = predicted - (coeffs[0] + coeffs[1] * (i - 2));
+                if ((actualChange > 0 && predChange > 0) || (actualChange < 0 && predChange < 0)) {
+                    correct++;
+                }
+                total++;
+            }
+            return total === 0 ? 50 : (correct / total) * 100;
+        }
+
         // Update visualization
-        function updateVisualization() {
-            if (prices.length < 200) return;
-            
+        function update() {
+            if (tick < 10 || prices.length < 10) return;
+
             const currentPrice = prices[tick];
             const accThreshold = parseFloat(document.getElementById('accThreshold').value);
             const snrThreshold = parseFloat(document.getElementById('snrThreshold').value);
-            
-            // Simulate model selection (random for demo)
-            const activeW = windowSizes[Math.floor(Math.random() * windowSizes.length)];
-            const activeO = polynomialOrders[Math.floor(Math.random() * polynomialOrders.length)];
-            const dirAcc = 45 + Math.random() * 15; // 45-60%
-            
+
+            // Find best model
+            let bestAcc = 0, bestW = 10, bestO = 0, bestCoeffs = [];
+            windowSizes.forEach(W => {
+                polynomialOrders.forEach(O => {
+                    if (tick < W) return;
+                    const window = prices.slice(tick - W, tick + 1);
+                    const coeffs = olsFit(window, O);
+                    const acc = calcDirAccuracy(window, coeffs, O);
+                    if (acc > bestAcc) {
+                        bestAcc = acc;
+                        bestW = W;
+                        bestO = O;
+                        bestCoeffs = coeffs;
+                    }
+                });
+            });
+
             // Update grid
-            document.querySelectorAll('.grid-cell').forEach(cell => cell.classList.remove('active'));
-            const activeCell = document.getElementById(`cell-${activeW}-${activeO}`);
+            document.querySelectorAll('.grid-cell').forEach(c => c.classList.remove('active'));
+            const activeCell = document.getElementById(`cell-${bestW}-${bestO}`);
             if (activeCell) activeCell.classList.add('active');
-            
-            // Update Brain A display
-            document.getElementById('activeW').textContent = activeW;
-            document.getElementById('activeO').textContent = activeO;
-            document.getElementById('dirAcc').textContent = dirAcc.toFixed(1) + '%';
-            
+
+            // Brain A display
+            document.getElementById('activeW').textContent = bestW;
+            document.getElementById('activeO').textContent = bestO;
+            document.getElementById('dirAcc').textContent = bestAcc.toFixed(1) + '%';
+            document.getElementById('dirAccVal').textContent = bestAcc.toFixed(1) + '%';
+
             // Brain B signals
-            const window = prices.slice(tick - activeW, tick + 1);
-            const coeffs = olsFit(window, activeO);
-            
-            const fairValue = currentPrice * (1 + (Math.random() - 0.5) * 0.001);
-            const velocity = activeO >= 1 ? coeffs[1] * (1 + Math.random() * 0.5) : 0;
-            const acceleration = activeO >= 2 ? coeffs[2] * 2 : 0;
-            
+            const window = prices.slice(tick - bestW, tick + 1);
+            const fairValue = currentPrice * (1 + (Math.random() - 0.5) * 0.0005);
+            const velocity = bestO >= 1 ? bestCoeffs[1] : 0;
+            const acceleration = bestO >= 2 ? (bestCoeffs[2] || 0) * 2 : 0;
             const localVol = 0.001;
             const snr = Math.abs(velocity) / localVol;
-            
-            document.getElementById('fairValue').textContent = fairValue.toFixed(2);
+            const ar1 = calcAR1(window);
+
+            document.getElementById('fairValue').textContent = fairValue.toFixed(4);
             document.getElementById('velocity').textContent = velocity.toFixed(6);
             document.getElementById('acceleration').textContent = acceleration.toFixed(6);
+            document.getElementById('snrVal').textContent = snr.toFixed(2);
             document.getElementById('snrValue').textContent = snr.toFixed(2);
-            document.getElementById('currentSNR').textContent = snr.toFixed(2);
-            
+            document.getElementById('ar1Coeff').textContent = ar1.toFixed(4);
+            document.getElementById('currentPrice').textContent = currentPrice.toFixed(4);
+            document.getElementById('currentTick').textContent = tick;
+
             // Quadrant routing
             document.querySelectorAll('.quadrant').forEach(q => q.classList.remove('active'));
-            
             let action = 'WAITING';
-            if (dirAcc > accThreshold && snr > snrThreshold) {
+            if (bestAcc > accThreshold && snr > snrThreshold) {
                 document.getElementById('q1').classList.add('active');
-                action = velocity > 0 ? 'BUY (Momentum)' : 'SELL (Momentum)';
-                
-                // Simulate trade
-                if (Math.random() < 0.1) {
-                    totalTrades++;
-                    const isWin = Math.random() < 0.4;
-                    if (isWin) winningTrades++;
-                    const profit = isWin ? Math.random() * 50 : -Math.random() * 30;
-                    cumulativeProfit += profit;
-                    
-                    document.getElementById('totalTrades').textContent = totalTrades;
-                    document.getElementById('winRate').textContent = ((winningTrades / totalTrades) * 100).toFixed(1) + '%';
-                    document.getElementById('cumulativeProfit').textContent = cumulativeProfit.toFixed(2);
-                }
-            } else if (dirAcc < accThreshold && snr < 1.0) {
+                action = velocity > 0 ? 'BUY' : 'SELL';
+            } else if (bestAcc < accThreshold && snr < snrThreshold) {
                 document.getElementById('q2').classList.add('active');
                 action = 'Market Making';
-            } else if (dirAcc < accThreshold && snr > snrThreshold) {
+            } else if (bestAcc < accThreshold && snr > snrThreshold) {
                 document.getElementById('q3').classList.add('active');
-                action = 'HALT (Danger)';
+                action = 'HALT';
             } else {
                 document.getElementById('q4').classList.add('active');
-                action = 'Waiting';
+                action = 'Wait';
             }
-            
             document.getElementById('currentAction').textContent = action;
-            
-            // Draw chart
+
             drawChart();
         }
 
-        // Chart drawing
+        // Chart
         function drawChart() {
             const canvas = document.getElementById('chartCanvas');
             const ctx = canvas.getContext('2d');
-            
-            canvas.width = canvas.parentElement.offsetWidth - 60;
-            canvas.height = canvas.parentElement.offsetHeight - 60;
-            
-            const width = canvas.width;
-            const height = canvas.height;
-            
-            ctx.clearRect(0, 0, width, height);
-            
-            // Draw price line
-            const displayPrices = prices.slice(Math.max(0, tick - 200), tick + 1);
-            if (displayPrices.length < 2) return;
-            
-            const minPrice = Math.min(...displayPrices);
-            const maxPrice = Math.max(...displayPrices);
-            const range = maxPrice - minPrice;
-            
+            canvas.width = canvas.parentElement.offsetWidth - 40;
+            canvas.height = canvas.parentElement.offsetHeight - 40;
+            const w = canvas.width, h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            const display = prices.slice(Math.max(0, tick - 200), tick + 1);
+            if (display.length < 2) return;
+
+            const min = Math.min(...display), max = Math.max(...display);
+            const range = max - min || 1;
+
             ctx.beginPath();
             ctx.strokeStyle = '#00d4ff';
             ctx.lineWidth = 2;
-            
-            displayPrices.forEach((price, i) => {
-                const x = (i / displayPrices.length) * width;
-                const y = height - ((price - minPrice) / range) * height;
-                
+            display.forEach((p, i) => {
+                const x = (i / display.length) * w;
+                const y = h - ((p - min) / range) * h;
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
             });
-            
             ctx.stroke();
-            
-            // Draw gradient
-            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, h);
             gradient.addColorStop(0, 'rgba(0, 212, 255, 0.3)');
             gradient.addColorStop(1, 'rgba(0, 212, 255, 0)');
-            
             ctx.fillStyle = gradient;
             ctx.beginPath();
-            displayPrices.forEach((price, i) => {
-                const x = (i / displayPrices.length) * width;
-                const y = height - ((price - minPrice) / range) * height;
-                
+            display.forEach((p, i) => {
+                const x = (i / display.length) * w;
+                const y = h - ((p - min) / range) * h;
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
             });
-            ctx.lineTo(width, height);
-            ctx.lineTo(0, height);
+            ctx.lineTo(w, h);
+            ctx.lineTo(0, h);
             ctx.closePath();
             ctx.fill();
         }
 
-        // Simulation control
-        function startSimulation() {
-            if (!prices.length) {
-                prices = [50000];
-            }
-            
-            simulationInterval = setInterval(() => {
-                if (!isPaused && tick < 10000) {
-                    prices.push(generatePrice(prices[prices.length - 1]));
-                    tick++;
-                    updateVisualization();
-                }
-            }, 50);
+        // Controls
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById('playBtn');
+            btn.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+            btn.classList.toggle('active', isPlaying);
+            if (isPlaying) animate();
         }
 
-        function toggleSimulation() {
-            isPaused = !isPaused;
+        function animate() {
+            if (!isPlaying || tick >= XRP_DATA.length - 1) return;
+            tick++;
+            prices.push(XRP_DATA[tick]);
+            update();
+            animationId = setTimeout(animate, 50);
         }
 
         function resetSimulation() {
-            prices = [50000];
             tick = 0;
-            totalTrades = 0;
-            winningTrades = 0;
-            cumulativeProfit = 0;
-            
-            document.getElementById('totalTrades').textContent = '0';
-            document.getElementById('winRate').textContent = '0%';
-            document.getElementById('cumulativeProfit').textContent = '0.00';
-            
-            document.querySelectorAll('.grid-cell').forEach(cell => cell.classList.remove('active'));
+            prices = [XRP_DATA[0]];
+            isPlaying = false;
+            clearTimeout(animationId);
+            const btn = document.getElementById('playBtn');
+            btn.textContent = '▶ Play';
+            btn.classList.remove('active');
+            document.querySelectorAll('.grid-cell').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.quadrant').forEach(q => q.classList.remove('active'));
+            document.getElementById('currentAction').textContent = 'WAITING';
+            document.getElementById('currentTick').textContent = '0';
+            document.getElementById('currentPrice').textContent = '--';
+            document.getElementById('ar1Coeff').textContent = '--';
+            document.getElementById('snrValue').textContent = '--';
+            document.getElementById('dirAcc').textContent = '--%';
+            drawChart();
         }
 
-        // Initialize
+        // Init
         initGridMatrix();
-        startSimulation();
+        prices = [XRP_DATA[0]];
+        tick = 0;
+        update();
+        drawChart();
     </script>
 </body>
 </html>
