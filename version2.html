@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Flux Predictor — XRP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Space+Mono:italic,wght@400;700&family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%2500ff41%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2270%22 font-family=%22monospace%22 font-size=%2250%22 fill=%22%25050505%22 text-anchor=%22middle%22>2</text></svg>">
+    <style>
+        :root {
+            --void: #000000;
+            --deep: #0a0a0f;
+            --neural: #ff2a6d;
+            --flux: #05d9e8;
+            --pulse: #f9d71c;
+            --ghost: rgba(255, 255, 255, 0.05);
+            --text: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.4);
+            --mono: 'Space Mono', monospace;
+            --data: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border; cursor: none; }
+
+        body {
+            font-family: var(--mono);
+            background: var(--void);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            perspective: 1000px;
+        }
+
+        /* Custom cursor */
+        #cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--flux);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transition: transform 0.1s;
+            mix-blend-mode: difference;
+        }
+
+        #cursor::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 4px; height: 4px;
+            background: var(--neural);
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+        }
+
+        nav .title {
+            font-family: var(--data);
+            font-size: 14px;
+            color: var(--flux);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        nav .versions {
+            display: flex;
+            gap: 20px;
+        }
+
+        nav .version {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-dim);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 16px;
+            border: 1px solid var(--ghost);
+            transition: all 0.3s;
+        }
+
+        nav .version:hover, nav .version.active {
+            color: var(--text);
+            border-color: var(--flux);
+            background: rgba(5, 217, 232, 0.1);
+        }
+
+        /* Main canvas */
+        #mainCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Overlay UI */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .header {
+            position: absolute;
+            top: 100px;
+            left: 60px;
+            transform-style: preserve-3d;
+            transform: translateZ(50px);
+        }
+
+        .header h1 {
+            font-family: var(--data);
+            font-size: 72px;
+            font-weight: 800;
+            line-height: 0.85;
+            letter-spacing: -3px;
+            color: var(--text);
+            text-transform: uppercase;
+            position: relative;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .header h1::before {
+            content: 'NEURAL FLUX';
+            position: absolute;
+            top: 0;
+            left: 2px;
+            color: var(--neural);
+            opacity: 0.3;
+            filter: blur(8px);
+            z-index: -1;
+        }
+
+        .header .subtitle {
+            font-family: var(--mono);
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-top: 24px;
+            max-width: 500px;
+            line-height: 1.8;
+            border-left: 2px solid var(--pulse);
+            padding-left: 16px;
+        }
+
+        /* Stats floating */
+        .stats-float {
+            position: absolute;
+            right: 60px;
+            top: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transform-style: preserve-3d;
+            transform: translateZ(80px);
+        }
+
+        .stat-float {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--ghost);
+            padding: 16px 24px;
+            min-width: 180px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-float::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: var(--flux);
+            animation: pulse-bar 2s ease-in-out infinite;
+        }
+
+        .stat-float-value {
+            font-family: var(--data);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--flux);
+            letter-spacing: -1px;
+        }
+
+        .stat-float-label {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Control panel */
+        .controls {
+            position: absolute;
+            bottom: 60px;
+            left: 60px;
+            display: flex;
+            gap: 16px;
+            transform-style: preserve-3d;
+            transform: translateZ(60px);
+            pointer-events: auto;
+        }
+
+        .btn {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--flux);
+            padding: 16px 32px;
+            font-family: var(--data);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--flux);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--flux), transparent);
+            transition: left 0.5s;
+            opacity: 0.3;
+        }
+
+        .btn:hover {
+            background: var(--flux);
+            color: var(--void);
+            box-shadow: 0 0 40px rgba(5, 217, 232, 0.6);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn.active {
+            background: var(--neural);
+            border-color: var(--neural);
+            color: var(--void);
+            box-shadow: 0 0 40px rgba(255, 26, 109, 0.6);
+        }
+
+        /* Neural network viz */
+        .neural-viz {
+            position: absolute;
+            bottom: 60px;
+            right: 60px;
+            width: 300px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--ghost);
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+            transform: translateZ(40px);
+            pointer-events: auto;
+        }
+
+        .neural-viz canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotateX(0deg); }
+            50% { transform: translateY(-10px) rotateX(5deg); }
+        }
+
+        @keyframes pulse-bar {
+            0%, 100% { opacity: 0.3; height: 30%; }
+            50% { opacity: 1; height: 100%; }
+        }
+
+        /* Particle glow */
+        .glow-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+            background: radial-gradient(500px circle at 50% 50%, rgba(5, 217, 232, 0.1), transparent 70%);
+        }
+    </style>
+</head>
+<body>
+    <div id="cursor"></div>
+
+    <nav>
+        <div class="title">NEURAL FLUX PREDICTOR</div>
+        <div class="versions">
+            <a href="index.html" class="version">Version 1</a>
+            <a href="version2.html" class="version active">Version 2</a>
+        </div>
+    </nav>
+
+    <canvas id="mainCanvas"></canvas>
+
+    <div class="overlay">
+        <div class="header">
+            <h1>NEURAL FLUX<br>PREDICTOR</h1>
+            <p class="subtitle">
+                Organic particle system reacts to price velocity.
+                Neural network weights visualize in real-time.
+                Holographic depth with parallax scattering.
+            </p>
+        </div>
+
+        <div class="stats-float">
+            <div class="stat-float">
+                <div class="stat-float-value" id="currentPrice">--</div>
+                <div class="stat-float-label">Price (USD)</div>
+            </div>
+            <div class="stat-float">
+                <div class="stat-float-value" id="velocity">--</div>
+                <div class="stat-float-label">Velocity</div>
+            </div>
+            <div class="stat-float">
+                <div class="stat-float-value" id="neuralActivity">--%</div>
+                <div class="stat-float-label">Neural Activity</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="playBtn">▶ Initiate</button>
+            <button class="btn" onclick="resetSim()">↻ Reset</button>
+        </div>
+
+        <div class="neural-viz">
+            <canvas id="neuralCanvas"></canvas>
+        </div>
+    </div>
+
+    <div class="glow-layer"></div>
+
+    <script>
+        // XRP data (same as V1)
+        const XRP_DATA = [
+1.43148, 1.43101, 1.43112, 1.43092, 1.43086, 1.43083, 1.43098, 1.43126, 1.43153, 1.43093,
+1.43014, 1.42992, 1.43053, 1.43113, 1.43062, 1.43056, 1.43046, 1.43071, 1.43093, 1.43095,
+1.43109, 1.43112, 1.43106, 1.43095, 1.43115, 1.43127, 1.43133, 1.43139, 1.43126, 1.43103,
+1.43112, 1.43114, 1.43128, 1.43147, 1.43147, 1.43143, 1.43138, 1.43145, 1.43156, 1.43157,
+1.43166, 1.43171, 1.43167, 1.43169, 1.43162, 1.43153, 1.43151, 1.43147, 1.43145, 1.43151,
+1.43156, 1.43161, 1.43167, 1.43172, 1.43178, 1.43184, 1.43189, 1.43195, 1.43201, 1.43206,
+1.43212, 1.43218, 1.43223, 1.43229, 1.43235, 1.43240, 1.43246, 1.43252, 1.43257, 1.43263,
+1.43269, 1.43274, 1.43280, 1.43286, 1.43291, 1.43297, 1.43303, 1.43308, 1.43314, 1.43320,
+1.43325, 1.43331, 1.43337, 1.43342, 1.43348, 1.43354, 1.43359, 1.43365, 1.43371, 1.43376,
+1.43382, 1.43388, 1.43393, 1.43399, 1.43405, 1.43410, 1.43416, 1.43422, 1.43427, 1.43433,
+1.43439, 1.43444, 1.43450, 1.43456, 1.43461, 1.43467, 1.43473, 1.43478, 1.43484, 1.43490,
+1.43495, 1.43501, 1.43507, 1.43512, 1.43518, 1.43524, 1.43529, 1.43535, 1.43541, 1.43546,
+1.43552, 1.43558, 1.43563, 1.43569, 1.43575, 1.43580, 1.43586, 1.43592, 1.43597, 1.43603,
+1.43609, 1.43614, 1.43620, 1.43626, 1.43631, 1.43637, 1.43643, 1.43648, 1.43654, 1.43660,
+1.43665, 1.43671, 1.43677, 1.43682, 1.43688, 1.43694, 1.43699, 1.43705, 1.43711, 1.43716,
+1.43722, 1.43728, 1.43733, 1.43739, 1.43745, 1.43750, 1.43756, 1.43762, 1.43767, 1.43773,
+1.43779, 1.43784, 1.43790, 1.43796, 1.43801, 1.43807, 1.43813, 1.43818, 1.43824, 1.43830,
+1.43835, 1.43841, 1.43847, 1.43852, 1.43858, 1.43864, 1.43869, 1.43875, 1.43881, 1.43886,
+1.43892, 1.43898, 1.43903, 1.43909, 1.43915, 1.43920, 1.43926, 1.43932, 1.43937, 1.43943,
+1.43949, 1.43954, 1.43960, 1.43966, 1.43971, 1.43977, 1.43983, 1.43988, 1.43994, 1.44000
+        ];
+
+        // State
+        let tick = 0;
+        let prices = [];
+        let isPlaying = false;
+        let animationId = null;
+
+        // Canvas setup
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const neuralCanvas = document.getElementById('neuralCanvas');
+        const neuralCtx = neuralCanvas.getContext('2d');
+
+        let w, h;
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            neuralCanvas.width = 300;
+            neuralCanvas.height = 200;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX - 10 + 'px';
+            cursor.style.top = e.clientY - 10 + 'px';
+        });
+
+        // Particle system
+        class Particle {
+            constructor() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+                this.color = Math.random() > 0.5 ? '#ff2a6d' : '#05d9e8';
+            }
+
+            update(velocity) {
+                this.x += this.vx + velocity * 2;
+                this.y += this.vy;
+                if (this.x < 0) this.x = w;
+                if (this.x > w) this.x = 0;
+                if (this.y < 0) this.y = h;
+                if (this.y > h) this.y = 0;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        const particles = [];
+        for (let i = 0; i < 150; i++) {
+            particles.push(new Particle());
+        }
+
+        // Neural network visualization
+        const neurons = [];
+        const connections = [];
+        function initNeural() {
+            for (let i = 0; i < 8; i++) {
+                neurons.push({
+                    x: Math.random() * 280 + 10,
+                    y: Math.random() * 180 + 10,
+                    activation: 0
+                });
+            }
+            for (let i = 0; i < neurons.length; i++) {
+                for (let j = i + 1; j < neurons.length; j++) {
+                    connections.push({ from: i, to: j, weight: Math.random() });
+                }
+            }
+        }
+        initNeural();
+
+        function drawNeural(activity) {
+            neuralCtx.clearRect(0, 0, 300, 200);
+            neurons.forEach((n, i) => {
+                n.activation = Math.min(1, n.activation + (activity - n.activation) * 0.1);
+                neuralCtx.beginPath();
+                neuralCtx.arc(n.x, n.y, 4 + n.activation * 6, 0, Math.PI * 2);
+                neuralCtx.fillStyle = `rgba(255, 26, 109, ${0.3 + n.activation * 0.7})`;
+                neuralCtx.fill();
+            });
+            connections.forEach(c => {
+                const from = neurons[c.from];
+                const to = neurons[c.to];
+                neuralCtx.beginPath();
+                neuralCtx.moveTo(from.x, from.y);
+                neuralCtx.lineTo(to.x, to.y);
+                neuralCtx.strokeStyle = `rgba(5, 217, 232, ${c.weight * 0.5})`;
+                neuralCtx.lineWidth = 0.5;
+                neuralCtx.stroke();
+            });
+        }
+
+        // Main render
+        function render() {
+            ctx.clearRect(0, 0, w, h);
+
+            // Price line
+            if (prices.length > 1) {
+                const display = prices.slice(Math.max(0, tick - 100), tick + 1);
+                const min = Math.min(...display);
+                const max = Math.max(...display);
+                const range = max - min || 1;
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#05d9e8';
+                ctx.lineWidth = 3;
+                display.forEach((p, i) => {
+                    const x = (i / display.length) * w;
+                    const y = h / 2 + ((p - min) / range) * 100;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+
+                // Glow
+                ctx.shadowColor = '#05d9e8';
+                ctx.shadowBlur = 20;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            // Particles
+            const velocity = prices.length > 1 ? prices[tick] - prices[tick - 1] : 0;
+            particles.forEach(p => {
+                p.update(velocity);
+                p.draw();
+            });
+
+            // Neural activity
+            const activity = Math.abs(velocity) * 1000;
+            drawNeural(activity);
+
+            // Update UI
+            if (prices[tick]) {
+                document.getElementById('currentPrice').textContent = prices[tick].toFixed(4);
+                document.getElementById('velocity').textContent = velocity.toFixed(6);
+                document.getElementById('neuralActivity').textContent = (activity * 100).toFixed(1) + '%';
+            }
+        }
+
+        function animate() {
+            if (!isPlaying || tick >= XRP_DATA.length - 1) return;
+            tick++;
+            prices.push(XRP_DATA[tick]);
+            render();
+            animationId = setTimeout(animate, 50);
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById('playBtn');
+            btn.textContent = isPlaying ? '⏸ Pause' : '▶ Initiate';
+            btn.classList.toggle('active', isPlaying);
+            if (isPlaying) animate();
+        }
+
+        function resetSim() {
+            tick = 0;
+            prices = [];
+            isPlaying = false;
+            document.getElementById('playBtn').textContent = '▶ Initiate';
+            document.getElementById('playBtn').classList.remove('active');
+            document.getElementById('currentPrice').textContent = '--';
+            document.getElementById('velocity').textContent = '--';
+            document.getElementById('neuralActivity').textContent = '--%';
+            ctx.clearRect(0, 0, w, h);
+        }
+
+        // Init
+        document.getElementById('playBtn').onclick = togglePlay;
+        prices = [XRP_DATA[0]];
+        render();
+    </script>
+</body>
+</html>
