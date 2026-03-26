@@ -219,6 +219,7 @@
             if (tick < 10 || prices.length < 10) return;
 
             const currentPrice = prices[tick];
+            if (currentPrice === undefined) return;
             const accThreshold = parseFloat(document.getElementById('accThreshold').value);
             const snrThreshold = parseFloat(document.getElementById('snrThreshold').value);
 
