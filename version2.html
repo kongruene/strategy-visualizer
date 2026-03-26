@@ -399,6 +399,10 @@
         const ctx = canvas.getContext('2d');
 
         let w, h;
+        // Neurons declared early to avoid hoisting issues
+        let neurons = [];
+        let connections = [];
+
         function resize() {
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
