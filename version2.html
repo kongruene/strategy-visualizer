@@ -452,7 +452,7 @@
             particles.push(new Particle());
         }
 
-        // Neural network visualization
+        // Neural network visualization with organic motion
         const neurons = [];
         const connections = [];
         function initNeural() {
@@ -460,35 +460,104 @@
                 neurons.push({
                     x: Math.random() * 280 + 10,
                     y: Math.random() * 180 + 10,
-                    activation: 0
+                    baseX: neurons[i]?.baseX || null, // will be set after init
+                    baseY: neurons[i]?.baseY || null,
+                    vx: (Math.random() - 0.5) * 0.2,
+                    vy: (Math.random() - 0.5) * 0.2,
+                    activation: 0,
+                    pulsePhase: Math.random() * Math.PI * 2
                 });
+                // Set base position after creation
+                neurons[i].baseX = neurons[i].x;
+                neurons[i].baseY = neurons[i].y;
             }
             for (let i = 0; i < neurons.length; i++) {
                 for (let j = i + 1; j < neurons.length; j++) {
-                    connections.push({ from: i, to: j, weight: Math.random() });
+                    connections.push({ from: i, to: j, weight: Math.random(), pulse: 0 });
                 }
             }
         }
         initNeural();
 
+        function updateNeurons(activity) {
+            neurons.forEach((n, i) => {
+                // Organic drift: Brownian motion around base position
+                n.x += n.vx + (Math.random() - 0.5) * 0.1;
+                n.y += n.vy + (Math.random() - 0.5) * 0.1;
+                
+                // Gentle return to base (spring force)
+                n.x += (n.baseX - n.x) * 0.005;
+                n.y += (n.baseY - n.y) * 0.005;
+                
+                // Activation pulse from activity
+                n.activation = Math.min(1, n.activation + (activity - n.activation) * 0.1);
+                
+                // Internal pulse rhythm (like breathing)
+                n.pulsePhase += 0.02;
+                const pulseSize = Math.sin(n.pulsePhase) * 0.3 + 0.7;
+                n.currentSize = pulseSize;
+            });
+            
+            // Connection pulses propagate
+            connections.forEach(c => {
+                const from = neurons[c.from];
+                const to = neurons[c.to];
+                const dist = Math.sqrt((from.x - to.x)**2 + (from.y - to.y)**2);
+                c.pulse = Math.max(0, c.pulse - 0.05);
+                // Fire when from neuron is highly activated
+                if (from.activation > 0.7 && Math.random() > 0.95) {
+                    c.pulse = 1;
+                }
+            });
+        }
+
         function drawNeural(activity) {
             neuralCtx.clearRect(0, 0, 300, 200);
-            neurons.forEach((n, i) => {
-                n.activation = Math.min(1, n.activation + (activity - n.activation) * 0.1);
-                neuralCtx.beginPath();
-                neuralCtx.arc(n.x, n.y, 4 + n.activation * 6, 0, Math.PI * 2);
-                neuralCtx.fillStyle = `rgba(255, 26, 109, ${0.3 + n.activation * 0.7})`;
-                neuralCtx.fill();
-            });
+            
+            // Draw connections first (behind neurons)
             connections.forEach(c => {
                 const from = neurons[c.from];
                 const to = neurons[c.to];
                 neuralCtx.beginPath();
                 neuralCtx.moveTo(from.x, from.y);
                 neuralCtx.lineTo(to.x, to.y);
-                neuralCtx.strokeStyle = `rgba(5, 217, 232, ${c.weight * 0.5})`;
-                neuralCtx.lineWidth = 0.5;
+                
+                // Pulse glow traveling along connection
+                const pulseAlpha = c.weight * 0.3 + c.pulse * 0.7;
+                neuralCtx.strokeStyle = `rgba(5, 217, 232, ${pulseAlpha})`;
+                neuralCtx.lineWidth = 0.5 + c.pulse * 2;
                 neuralCtx.stroke();
+                
+                // Pulse particle traveling
+                if (c.pulse > 0.1) {
+                    const pulseX = from.x + (to.x - from.x) * (1 - c.pulse);
+                    const pulseY = from.y + (to.y - from.y) * (1 - c.pulse);
+                    neuralCtx.beginPath();
+                    neuralCtx.arc(pulseX, pulseY, 2, 0, Math.PI * 2);
+                    neuralCtx.fillStyle = `rgba(255, 26, 109, ${c.pulse})`;
+                    neuralCtx.fill();
+                }
+            });
+            
+            // Draw neurons
+            neurons.forEach((n, i) => {
+                const size = (4 + n.activation * 6) * n.currentSize;
+                neuralCtx.beginPath();
+                neuralCtx.arc(n.x, n.y, size, 0, Math.PI * 2);
+                
+                // Glow effect
+                neuralCtx.shadowColor = 'rgba(255, 26, 109, 0.8)';
+                neuralCtx.shadowBlur = 10 + n.activation * 15;
+                
+                neuralCtx.fillStyle = `rgba(255, 26, 109, ${0.3 + n.activation * 0.7})`;
+                neuralCtx.fill();
+                neuralCtx.shadowBlur = 0; // reset
+                
+                // Core
+                neuralCtx.beginPath();
+                neuralCtx.arc(n.x, n.y, size * 0.4, 0, Math.PI * 2);
+                neuralCtx.fillStyle = `rgba(5, 217, 232, ${0.5 + n.activation * 0.5})`;
+                neuralCtx.fill();
             });
         }
 
@@ -538,6 +607,7 @@
 
             // Neural activity visualization (subtle pulse even when idle)
             const activity = isPlaying ? Math.abs(velocity) * 1000 : 0.2 + Math.random() * 0.3;
+            updateNeurons(activity);
             drawNeural(activity);
 
             bgAnimationId = requestAnimationFrame(animateBackground);
