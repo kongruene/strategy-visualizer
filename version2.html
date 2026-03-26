@@ -358,9 +358,7 @@
             <button class="btn" onclick="resetSim()">↻ Reset</button>
         </div>
 
-        <div class="neural-viz">
-            <canvas id="neuralCanvas"></canvas>
-        </div>
+        
     </div>
 
     <div class="glow-layer"></div>
@@ -399,15 +397,18 @@
         // Canvas setup
         const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d');
-        const neuralCanvas = document.getElementById('neuralCanvas');
-        const neuralCtx = neuralCanvas.getContext('2d');
 
         let w, h;
         function resize() {
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
-            neuralCanvas.width = 300;
-            neuralCanvas.height = 200;
+            // Reinit neurons on resize so they're on screen
+            if (neurons.length > 0) {
+                neurons.forEach(n => {
+                    n.x = Math.min(n.x, w);
+                    n.y = Math.min(n.y, h);
+                });
+            }
         }
         resize();
         window.addEventListener('resize', resize);
@@ -452,112 +453,115 @@
             particles.push(new Particle());
         }
 
-        // Neural network visualization with organic motion
+        // Neural network visualization - neurons fly across screen
         const neurons = [];
         const connections = [];
-        function initNeural() {
+        function initNeurons() {
+            neurons.length = 0;
+            connections.length = 0;
             for (let i = 0; i < 8; i++) {
                 neurons.push({
-                    x: Math.random() * 280 + 10,
-                    y: Math.random() * 180 + 10,
-                    baseX: neurons[i]?.baseX || null, // will be set after init
-                    baseY: neurons[i]?.baseY || null,
-                    vx: (Math.random() - 0.5) * 0.2,
-                    vy: (Math.random() - 0.5) * 0.2,
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 3,  // Faster velocity
+                    vy: (Math.random() - 0.5) * 3,
                     activation: 0,
-                    pulsePhase: Math.random() * Math.PI * 2
+                    pulsePhase: Math.random() * Math.PI * 2,
+                    size: Math.random() * 3 + 5  // Varied base sizes
                 });
-                // Set base position after creation
-                neurons[i].baseX = neurons[i].x;
-                neurons[i].baseY = neurons[i].y;
             }
+            // Create dynamic connections (nearest 3 neighbors)
             for (let i = 0; i < neurons.length; i++) {
-                for (let j = i + 1; j < neurons.length; j++) {
-                    connections.push({ from: i, to: j, weight: Math.random(), pulse: 0 });
+                let neighbors = [];
+                for (let j = 0; j < neurons.length; j++) {
+                    if (i !== j) {
+                        const dist = Math.sqrt((neurons[i].x - neurons[j].x)**2 + (neurons[i].y - neurons[j].y)**2);
+                        neighbors.push({ idx: j, dist });
+                    }
+                }
+                neighbors.sort((a, b) => a.dist - b.dist);
+                for (let k = 0; k < Math.min(3, neighbors.length); k++) {
+                    connections.push({ from: i, to: neighbors[k].idx, weight: Math.random(), pulse: 0 });
                 }
             }
         }
-        initNeural();
+        initNeurons();
 
         function updateNeurons(activity) {
             neurons.forEach((n, i) => {
-                // Organic drift: Brownian motion around base position
-                n.x += n.vx + (Math.random() - 0.5) * 0.1;
-                n.y += n.vy + (Math.random() - 0.5) * 0.1;
+                // Fast movement across screen
+                n.x += n.vx * 2 + (Math.random() - 0.5) * 0.5;
+                n.y += n.vy * 2 + (Math.random() - 0.5) * 0.5;
                 
-                // Gentle return to base (spring force)
-                n.x += (n.baseX - n.x) * 0.005;
-                n.y += (n.baseY - n.y) * 0.005;
+                // Wrap around screen edges (fly across)
+                if (n.x < -20) n.x = w + 20;
+                if (n.x > w + 20) n.x = -20;
+                if (n.y < -20) n.y = h + 20;
+                if (n.y > h + 20) n.y = -20;
                 
                 // Activation pulse from activity
                 n.activation = Math.min(1, n.activation + (activity - n.activation) * 0.1);
                 
-                // Internal pulse rhythm (like breathing)
-                n.pulsePhase += 0.02;
+                // Internal pulse rhythm
+                n.pulsePhase += 0.05;
                 const pulseSize = Math.sin(n.pulsePhase) * 0.3 + 0.7;
                 n.currentSize = pulseSize;
             });
             
-            // Connection pulses propagate
+            // Update connections dynamically (recompute nearest neighbors)
             connections.forEach(c => {
-                const from = neurons[c.from];
-                const to = neurons[c.to];
-                const dist = Math.sqrt((from.x - to.x)**2 + (from.y - to.y)**2);
-                c.pulse = Math.max(0, c.pulse - 0.05);
-                // Fire when from neuron is highly activated
-                if (from.activation > 0.7 && Math.random() > 0.95) {
+                c.pulse = Math.max(0, c.pulse - 0.08);
+                if (neurons[c.from].activation > 0.7 && Math.random() > 0.92) {
                     c.pulse = 1;
                 }
             });
         }
 
         function drawNeural(activity) {
-            neuralCtx.clearRect(0, 0, 300, 200);
-            
-            // Draw connections first (behind neurons)
+            // Draw on main canvas now (neurons fly everywhere)
+            // Connections first
             connections.forEach(c => {
                 const from = neurons[c.from];
                 const to = neurons[c.to];
-                neuralCtx.beginPath();
-                neuralCtx.moveTo(from.x, from.y);
-                neuralCtx.lineTo(to.x, to.y);
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
                 
-                // Pulse glow traveling along connection
-                const pulseAlpha = c.weight * 0.3 + c.pulse * 0.7;
-                neuralCtx.strokeStyle = `rgba(5, 217, 232, ${pulseAlpha})`;
-                neuralCtx.lineWidth = 0.5 + c.pulse * 2;
-                neuralCtx.stroke();
+                const pulseAlpha = c.weight * 0.2 + c.pulse * 0.8;
+                ctx.strokeStyle = `rgba(5, 217, 232, ${pulseAlpha})`;
+                ctx.lineWidth = 0.3 + c.pulse * 3;
+                ctx.stroke();
                 
-                // Pulse particle traveling
+                // Pulse particle
                 if (c.pulse > 0.1) {
                     const pulseX = from.x + (to.x - from.x) * (1 - c.pulse);
                     const pulseY = from.y + (to.y - from.y) * (1 - c.pulse);
-                    neuralCtx.beginPath();
-                    neuralCtx.arc(pulseX, pulseY, 2, 0, Math.PI * 2);
-                    neuralCtx.fillStyle = `rgba(255, 26, 109, ${c.pulse})`;
-                    neuralCtx.fill();
+                    ctx.beginPath();
+                    ctx.arc(pulseX, pulseY, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 26, 109, ${c.pulse})`;
+                    ctx.fill();
                 }
             });
             
-            // Draw neurons
+            // Neurons
             neurons.forEach((n, i) => {
-                const size = (4 + n.activation * 6) * n.currentSize;
-                neuralCtx.beginPath();
-                neuralCtx.arc(n.x, n.y, size, 0, Math.PI * 2);
+                const size = (n.size + n.activation * 8) * n.currentSize;
                 
-                // Glow effect
-                neuralCtx.shadowColor = 'rgba(255, 26, 109, 0.8)';
-                neuralCtx.shadowBlur = 10 + n.activation * 15;
+                // Outer glow
+                ctx.shadowColor = 'rgba(255, 26, 109, 0.9)';
+                ctx.shadowBlur = 15 + n.activation * 20;
                 
-                neuralCtx.fillStyle = `rgba(255, 26, 109, ${0.3 + n.activation * 0.7})`;
-                neuralCtx.fill();
-                neuralCtx.shadowBlur = 0; // reset
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 26, 109, ${0.4 + n.activation * 0.6})`;
+                ctx.fill();
+                ctx.shadowBlur = 0;
                 
-                // Core
-                neuralCtx.beginPath();
-                neuralCtx.arc(n.x, n.y, size * 0.4, 0, Math.PI * 2);
-                neuralCtx.fillStyle = `rgba(5, 217, 232, ${0.5 + n.activation * 0.5})`;
-                neuralCtx.fill();
+                // Inner core
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, size * 0.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(5, 217, 232, ${0.6 + n.activation * 0.4})`;
+                ctx.fill();
             });
         }
 
@@ -656,7 +660,8 @@
         // Init
         document.getElementById('playBtn').onclick = togglePlay;
         prices = [XRP_DATA[0]];
-        animateBackground(); // Start particle animation immediately
+        initNeurons(); // Initialize neurons on main canvas
+        animateBackground();
         render();
     </script>
 </body>
