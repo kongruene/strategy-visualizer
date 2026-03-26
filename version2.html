@@ -492,11 +492,12 @@
             });
         }
 
-        // Main render
-        function render() {
+        // Background particle animation (always running)
+        let bgAnimationId = null;
+        function animateBackground() {
             ctx.clearRect(0, 0, w, h);
 
-            // Price line
+            // Price line (static if not playing)
             if (prices.length > 1) {
                 const display = prices.slice(Math.max(0, tick - 100), tick + 1);
                 const min = Math.min(...display);
@@ -513,27 +514,41 @@
                     else ctx.lineTo(x, y);
                 });
                 ctx.stroke();
-
-                // Glow
                 ctx.shadowColor = '#05d9e8';
                 ctx.shadowBlur = 20;
                 ctx.stroke();
                 ctx.shadowBlur = 0;
             }
 
-            // Particles
-            const velocity = prices.length > 1 ? prices[tick] - prices[tick - 1] : 0;
+            // Particles with Brownian motion (always moving)
+            const velocity = prices.length > 1 && tick > 0 ? prices[tick] - prices[tick - 1] : 0;
             particles.forEach(p => {
-                p.update(velocity);
+                // Brownian motion: random walk even when not playing
+                const brownianX = (Math.random() - 0.5) * 0.3;
+                const brownianY = (Math.random() - 0.5) * 0.3;
+                p.x += p.vx + brownianX + (velocity * 2);
+                p.y += p.vy + brownianY;
+                // Wrap around edges
+                if (p.x < 0) p.x = w;
+                if (p.x > w) p.x = 0;
+                if (p.y < 0) p.y = h;
+                if (p.y > h) p.y = 0;
                 p.draw();
             });
 
-            // Neural activity
-            const activity = Math.abs(velocity) * 1000;
+            // Neural activity visualization (subtle pulse even when idle)
+            const activity = isPlaying ? Math.abs(velocity) * 1000 : 0.2 + Math.random() * 0.3;
             drawNeural(activity);
 
-            // Update UI
+            bgAnimationId = requestAnimationFrame(animateBackground);
+        }
+
+        // Main render (only when playing)
+        function render() {
+            // Update UI only
             if (prices[tick]) {
+                const velocity = prices[tick] - prices[tick - 1];
+                const activity = Math.abs(velocity) * 1000;
                 document.getElementById('currentPrice').textContent = prices[tick].toFixed(4);
                 document.getElementById('velocity').textContent = velocity.toFixed(6);
                 document.getElementById('neuralActivity').textContent = (activity * 100).toFixed(1) + '%';
@@ -571,6 +586,7 @@
         // Init
         document.getElementById('playBtn').onclick = togglePlay;
         prices = [XRP_DATA[0]];
+        animateBackground(); // Start particle animation immediately
         render();
     </script>
 </body>
